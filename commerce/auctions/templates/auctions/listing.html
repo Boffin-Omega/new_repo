@@ -1,0 +1,95 @@
+{% extends 'auctions/layout.html' %}
+{% block title %} {{ name }} {% endblock %}
+{% block body %}
+    <div class="item_container">
+        {% if img %}
+            <img src="{{ MEDIA_URL }}{{ img }}" height="400px" width="auto">
+        {% else %}
+            <p>No image found</p>
+        {% endif %}
+        <div>
+            <h3>{{ name }}</h3>
+            <h5>Starting bid: ${{ price }}</h5>
+            {% if bid.status == "Sold" %}
+                {% if user.id == bid.buyer_id %}
+                    <div class="alert alert-success" role="alert">
+                        Congratulations, you won the bid!
+                    </div>
+                {% else %}
+                    <div class="alert alert-success" role="alert">
+                        Auction closed!
+                    </div>
+                {% endif %}
+                
+                {% if bid.buyer_id %}
+                    <div class="alert alert-warning" role="alert">
+                        Highest Bid: ${{ bid.bid_price }}
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning" role="alert">
+                        ITEM UNSOLD
+                    </div>
+                {% endif %}
+
+            {% elif user.id == bid.owner_id %}
+
+                <p>Current Bid: ${{ bid.bid_price}}</p>
+                <form action="{% url 'bid' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="bid" value="{{ bid.bid_price }}">
+                    <input type="hidden" name="id" value="{{ id }}">
+                    <button class="btn btn-danger" type="submit">Close Auction</button>
+                </form>
+            {% else %}
+                <p>Current Bid: ${{ bid.bid_price}}</p>
+                <form action="{% url 'bid' %}">
+                    <input placeholder="Bid" name="bid" min="{{ bid.bid_price }}">
+                    <input type="hidden" name="buyer_id" value="{{user.id}}">
+                    <input type="hidden" name="id" value="{{ id }}">
+                    <button type="submit" class="btn btn-primary">Place Bid</button>
+                </form>
+                <br>
+                {% if msg %}
+                    <div class="alert alert-warning" role="alert">
+                        {{ msg }}
+                    </div>
+                {% endif %}
+            {% endif %}
+            
+            <br>
+            <p>Product Description: {{ description }}</p>
+            <p>Category: {{ category }}</p>
+            <form action="{% url 'watchlist'%}">
+                <input type="hidden" name="id" value="{{ id }}">
+                {% if id in watchlist %}
+                    <div style="color:red"> &#10084 Added to watchlist</div>
+                {% else %}
+                    <button class="btn btn-primary" type="submit">Add to watchlist</button>
+                {% endif %}
+            </form>
+            <br>
+            <h2>Comments</h2>
+            {% if user.is_authenticated %}
+                <form action="{% url 'listing' id=id %}" method="post">
+                    {% csrf_token %}
+                    <div style="margin:10px">
+                        <p>Add a comment:</p>
+                        <textarea name="comment" rows="10" cols="50" style="padding: 5px;"></textarea>
+                        <br>
+                        <button class="btn btn-primary" type="submit">Comment</button>
+                    </div>
+                </form>
+            {% else %}
+            <div>Login to comment</div>
+            {% endif %}
+            <br>
+            {% for comment in comments %}
+                <h6 style="color:rgb(158, 28, 81)">{{ comment.user_id }} has commented: </h6>
+                <i>
+                    <p>{{ comment.date}}</p>
+                    <p>{{ comment.comment }}</p>
+                </i>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "auctions/layout.html" %}
+{% block title %} Your watchlist {% endblock %}
+
+{% block body %}
+    <h2>Your watchlist</h2>
+    {% if w_items %}
+        {% for item in w_items %}
+            <form action="{% url 'watchlist' %}" method="post">
+                {% csrf_token %}
+                <a href="{% url 'listing' id=item.id %}">
+                    <div class="item_container">
+                        {% if item.img %}
+                            <img src="{{ MEDIA_URL }}{{ item.img }}" class="i_content" width=auto height="250px"> 
+                        {% else %}
+                            <p>No image found </p>
+                        {% endif %}
+                        <div>
+                            <div class="i_content">Name: {{ item.name }}</div>
+                            <div class="i_content">Starting Bid: ${{ item.price }}</div>
+                            <div style="margin:10px">Description: {{ item.description }}</div>
+                            <button class="btn btn-danger">Remove from watchlist</button>
+                        </div> 
+                    </div>
+                </a>
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                
+            </form>
+        {% endfor %}
+    {% else %}
+            <p>Empty watchlist</p>
+    {% endif %}
+{% endblock %}

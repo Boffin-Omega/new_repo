@@ -1,0 +1,34 @@
+{% extends 'auctions/layout.html' %}
+{% block title %} Add new listing {% endblock %}
+{% block body %}
+    <h2>Add new listing</h2>
+    <form action="{% url 'create' %}" method="post">
+        {% csrf_token %}
+        <div class="form-group" style="margin:10px">
+            <label for="name">Product Name</label>
+            <input class="form-control" id ="name" name="name" aria-describedby="emailHelp" placeholder="Product name">
+            <br>
+
+            <label for="price"> Set starting Bid</label>
+            <input class="form-control" id ="price" name="price" aria-describedby="emailHelp" placeholder="Price">
+            <br>
+
+            <p>Enter product description</p>
+            <textarea name="desc" style="width:90vh; height: 100px; padding: 4px;"></textarea>
+            <br>
+
+            <label for="img">Upload Image(if any)</label>
+            <input class="form-control" type="file" id ="img" name="img" aria-describedby="emailHelp" accept="image/png, image/jpeg, image/jpg" enctype="multipart/form-data">
+            <br>
+
+            <p>Category (Choose the most appropriate option)</p>
+            <select name="category">
+                <option disabled="disabled" selected="true">Category</option>
+                {% for category in categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+            <br><br>
+            <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+{% endblock%}
