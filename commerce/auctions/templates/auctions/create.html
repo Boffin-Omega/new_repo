@@ -2,7 +2,7 @@
 {% block title %} Add new listing {% endblock %}
 {% block body %}
     <h2>Add new listing</h2>
-    <form action="{% url 'create' %}" method="post">
+    <form action="{% url 'create' %}" method="post" enctype= multipart/form-data>
         {% csrf_token %}
         <div class="form-group" style="margin:10px">
             <label for="name">Product Name</label>

@@ -1,16 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django import forms
 
-categories =  ["Books","Clothing", "Shoes & Jewelry", "Home & Kitchen", "Beauty & Personal Care","Health & Household",
-"Toys & Games","Sports & Outdoors","Automotive","Industrial & Scientific","Food","Electronic appliances","Accessories"]
-
-class listing_form(forms.Form):
-    name = forms.CharField(max_length = 64)
-    price = forms.FloatField()
-    category = forms.ChoiceField(choices=categories)
-    description = forms.CharField(max_length = 300, default='No description provided by seller', widget=forms.Textarea)
-    img = forms.ImageField(null=True,blank=True)
 
 class User(AbstractUser):
     watchlist = models.TextField(default='')

@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User,auction_listing,comments,bids,listing_form
+from .models import User,auction_listing,comments,bids
 import json
 import datetime
 
@@ -193,27 +193,23 @@ def watchlist(request):
 def create(request):
     if request.method == "POST":
         #add new listing
-        listing_form = listing_form(request.POST,request.FILES)
-        # check whether it's valid:
-        if listing_form.is_valid():
-            name = lising_form.cleaned_data["name"]
-            category = lising_form.cleaned_data["category"]
-            desc = lising_form.cleaned_data["desc"]
-            img = lising_form.cleaned_data["img"]
-            price = lising_form.cleaned_data["price"]
-            item = auction_listing(name = name, price = price, category = category, description = desc, img = img )
-            item.save()
+        name = request.POST.get("name")
+        category = request.POST.get("category")
+        desc = request.POST.get("desc")
+        img = request.FILES.get("img")
+        price = request.POST.get("price")
+        item = auction_listing(name = name, price = price, category = category, description = desc, img = img )
+        item.save()
 
-            owner_id = User.objects.get(pk=request.user.id).id
-            bid_record = bids(owner_id=owner_id, bid_price=price, item_id=item.id) #no buyer_id for new listings, im creating this bid record here itself instead of when bid button is clicked
-            #cuz if i didnt i wouldnt have any way of storing/getting to know owner_id.
-            
-            bid_record.save()
-            return HttpResponseRedirect(reverse("index"))
+        owner_id = User.objects.get(pk=request.user.id).id
+        bid_record = bids(owner_id=owner_id, bid_price=price, item_id=item.id) #no buyer_id for new listings, im creating this bid record here itself instead of when bid button is clicked
+        #cuz if i didnt i wouldnt have any way of storing/getting to know owner_id.
+        
+        bid_record.save()
+        return HttpResponseRedirect(reverse("index"))
 
-    #otherwise render new empty form
     return render(request,"auctions/create.html",{
-        "form":listing_form()
+        "categories":categories
     })
 
 def category(request):
