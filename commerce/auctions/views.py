@@ -4,17 +4,18 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User,auction_listing,comments,bids
+from .models import User,auction_listing,comments,bids, listing_form
 import json
 import datetime
 
-categories =  ["Books","Clothing", "Shoes & Jewelry", "Home & Kitchen", "Beauty & Personal Care","Health & Household",
+c_L =  ["Books","Clothing", "Shoes & Jewelry", "Home & Kitchen", "Beauty & Personal Care","Health & Household",
 "Toys & Games","Sports & Outdoors","Automotive","Industrial & Scientific","Food","Electronic appliances","Accessories"]
+categories = [(item, item) for item in c_L]
 def index(request):
     items = auction_listing.objects.all()
     return render(request, "auctions/index.html",{
         "items":items,
-        "categories":categories
+        "categories":c_L
     })
 
 def login_view(request):
@@ -85,7 +86,6 @@ def listing(request,id):
         wl=watchlist.split(",")
 
     item = auction_listing.objects.get(pk=id)
-    print(bids.objects.all())
     bid = bids.objects.get(item_id = item.id) # gets the latest bid(highest price) bid of the given item
     return render(request,"auctions/listing.html",{
         "name":item.name,
@@ -111,13 +111,17 @@ def bid(request):
         #going to this route only if user places a bid on an unsold item
         buyer_id = request.GET.get("buyer_id")
         item_id = request.GET.get("id")
-        price = int(request.GET.get("bid"))
+        price = (request.GET.get("bid"))
+
+        
 
         bid = bids.objects.get(item_id = item_id)
         item = auction_listing.objects.get(pk=item_id)
         #Entered bid price must be greater than current bid price
 
-        if price < bid.bid_price:
+        if type(price)!= int:
+            msg="Please enter a valid bid amount!"
+        elif price < bid.bid_price:
             msg = "Must bid higher than current highest bid!"
         else:
             msg=''
@@ -141,7 +145,6 @@ def bid(request):
     else:
         #post request means owner wants to close the auction
         item_id = request.POST.get("id")
-        print(item_id)
         bid = request.POST.get("bid")
         bid = bids.objects.get(item_id=item_id)
         bid.status = "Sold"
@@ -193,24 +196,30 @@ def watchlist(request):
 def create(request):
     if request.method == "POST":
         #add new listing
-        name = request.POST.get("name")
-        category = request.POST.get("category")
-        desc = request.POST.get("desc")
-        img = request.FILES.get("img")
-        price = request.POST.get("price")
-        item = auction_listing(name = name, price = price, category = category, description = desc, img = img )
-        item.save()
+        form = listing_form(request.POST, request.FILES)
+        if form.is_valid():
+            name = form.cleaned_data["name"]
+            category = form.cleaned_data["category"]
+            desc = form.cleaned_data["description"]
+            img = form.cleaned_data["img"]
+            price = form.cleaned_data["price"]
 
-        owner_id = User.objects.get(pk=request.user.id).id
-        bid_record = bids(owner_id=owner_id, bid_price=price, item_id=item.id) #no buyer_id for new listings, im creating this bid record here itself instead of when bid button is clicked
-        #cuz if i didnt i wouldnt have any way of storing/getting to know owner_id.
-        
-        bid_record.save()
-        return HttpResponseRedirect(reverse("index"))
+            item = auction_listing(name = name, price = price, category = category, description = desc, img = img )
+            item.save()
 
-    return render(request,"auctions/create.html",{
-        "categories":categories
-    })
+            owner_id = User.objects.get(pk=request.user.id).id
+            bid_record = bids(owner_id=owner_id, bid_price=price, item_id=item.id) #no buyer_id for new listings, im creating this bid record here itself instead of when bid button is clicked
+            #cuz if i didnt i wouldnt have any way of storing/getting to know owner_id.
+            
+            bid_record.save()
+            return HttpResponseRedirect(reverse("index"))
+        else:
+            return HttpResponseRedirect(reverse("create"))
+    else:
+        form = listing_form()
+        return render(request,"auctions/create.html",{
+            "form":form
+        })
 
 def category(request):
     category = request.GET.get("category")
